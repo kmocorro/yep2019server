@@ -137,7 +137,7 @@ app.post('/api/enter', (req, res) => {
         isRegistered().then((registered) => {
             if(!registered){
                 enterToParty().then(() => {
-                    res.status(200).json({success: 'Registered successfully!'});
+                    res.status(200).json({success: 'Successfully Registered!'});
                 });
             } else {
                 res.status(200).json({success: 'Already registered.'});
@@ -179,7 +179,7 @@ app.post('/api/enter', (req, res) => {
                 },  (err, results) => {
                     if(err){reject(err)}
 
-                    console.log(results);
+                    //console.log(results);
                     resolve()
 
                 });
