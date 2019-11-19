@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const moment = require('moment');
 
 const mysql = require('mysql');
 const mysqlLocal = mysql.createPool({
@@ -37,6 +38,7 @@ app.get('/', (req, res) => {
                 searchEmployee(registered).then((employee_details) => {
                     res.status(200).json(employee_details);
                 },  (err) => {
+
                     res.status(200).json({err: err});
                 })
             } else {
@@ -190,6 +192,55 @@ app.post('/api/enter', (req, res) => {
     }
 
 })
+
+app.get('/listahan', (req, res) => {
+
+    loadData().then((registered_list) => {
+        res.status(200).json(registered_list);
+    },  (err) => {
+        res.status(200).json({err: err});
+    });
+
+    function loadData(){
+        return new Promise((resolve, reject) => {
+            mysqlLocal.getConnection((err, connection) => {
+                if(err){return reject(err)}
+
+                connection.query({
+                    sql: 'SELECT a.id as id, a.dt as dt, a.employeeNumber as employeeNumber, b.firstname as firstname, b.lastname as lastname, b.shift as shift FROM yep2019_present a JOIN yep2019_venue b ON a.employeeNumber = b.employeeNumber ORDER BY a.id DESC;'
+                },  (err, results) => {
+                    if(err){return reject(err)}
+
+                    let registered_list = [];
+
+                    if(typeof results !== 'undefined' && results !== null && results.length > 0 ){
+
+                        for(let i=0; i<results.length; i++){
+
+                            registered_list.push({
+                                id: results[i].id,
+                                dt: moment(results[i].dt).calendar(),
+                                employeeNumber: results[i].employeeNumber,
+                                firstname: results[i].firstname,
+                                lastname: results[i].lastname,
+                                shift: results[i].shift
+                            })
+                        }
+
+                        resolve(registered_list);
+                    } else {
+                        resolve([])
+                    }
+
+                });
+                
+                connection.release();
+            });
+
+        });
+    }
+
+});
 
 app.listen(port, () => {
     console.log('Listening to port ' + port + '...');
